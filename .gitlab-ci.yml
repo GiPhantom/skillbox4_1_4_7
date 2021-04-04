@@ -21,7 +21,8 @@ install_dependencies:
   artifacts:
     paths:
       - node_modules
-      - build_$env
+      - build
+ #     - build_$env
   cache:
     key:
       files:
