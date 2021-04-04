@@ -2,25 +2,85 @@ image: node:14.15.0-stretch
 stages:
  - build
  - test
+# - deploy
+# - revert
 
+variables:
+  docker_html_path: "/www"
+  env: prod
+  deploy_subfolder: html
+
+#+++++++++++Build install React+++++++++++++++++
 install_dependencies:
- stage: build
- script: yarn install
- artifacts:
-   paths:
-     - node_modules
- cache:
-   key:
-     files:
-       - yarn.lock
-   paths:
-     - node_modules
-run_tests:
- stage: test
- script: CI=true yarn test
-
-run_linter:
-  stage: test
-  script: yarn run eslint src/**.js  
-
+  image: node:14.15.0-stretch
+  stage: build
+  script:
+    - yarn install
+    - yarn build
+    - mv build build_$env
+  artifacts:
+    paths:
+      - node_modules
+      - build_$env
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - node_modules
+ #+++++++job copy file mkdir symlink++++++++++++++
+ test:
+   stage: deploy
+   script:
+     - cp -r build /www/test-app/$CI_COMMIT_SHA
+     - ln -fsnv /var/www/test-app/$CI_COMMIT_SHA /WWW/html
+#+++++++++++++Build staging+++++++++++++++++++++++
+#build_staging:
+#  extends: install_dependencies
+#  variables:
+#    env: staging
+#    REACT_APP_WEBSITE_PREFIX: "[staging] "
+#    PUBLIC_URL: "/$CI_COMMIT_BRANCH"
+#
+#deploy_staging:
+#  extends: deploy_prod
+#  variables:
+#    deploy_subfolder: staging/$CI_COMMIT_BRANCH
+#    env: staging
+#  when: always
+#  only:
+#    - master
+#    - /feature-.*/
+#
+#deploy_prod:
+#  stage: deploy
+#  script:
+#    - cp -r build_$env $docker_html_path/test-app/${env}_$CI_COMMIT_SHA
+#    - cp -Pv $docker_html_path/$deploy_subfolder $docker_html_path/test-app/${env}_$CI_COM
+#  only:
+#    - master
+#
+#activate_prod:
+#  stage: deploy
+#  script:
+#    - ln -fsnv /var/www/test-app/${env}_$CI_COMMIT_SHA $docker_html_path/$deploy_subfolder
+#  when: manual
+#  only:
+#    - master
+#
+##+++++++Run stage test++++++++++++++++
+#run_tests:
+# stage: test
+# script: CI=true yarn test
+#
+##test linter all .js
+#run_linter:
+#  stage: test
+#  script: yarn run eslint src/**.js
+##++++++++++revert manual+++++++++++++++
+#revert:
+#  stage: revert
+#  when: manual
+#  script:
+#    - cp -Pv --remove-destination $docker_html_path/test-app/$CI_COMMIT_SHA/prev-version $
 
