@@ -29,7 +29,7 @@ install_dependencies:
     paths:
       - node_modules
  #+++++++job copy file mkdir symlink++++++++++++++
- test:
+test:
    stage: deploy
    script:
      - cp -r build /www/test-app/$CI_COMMIT_SHA
