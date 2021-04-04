@@ -3,7 +3,7 @@ stages:
  - build
  - test
  - deploy
-# - revert
+ #- revert
 
 variables:
   docker_html_path: "/www"
@@ -17,7 +17,7 @@ install_dependencies:
   script:
     - yarn install
     - yarn build
-    - mv build build_$env
+#    - mv build build_$env
   artifacts:
     paths:
       - node_modules
