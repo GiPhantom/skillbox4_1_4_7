@@ -3,7 +3,7 @@ stages:
  - build
  - test
  - deploy
- #- revert
+ - revert
 
 variables:
   docker_html_path: "/www"
@@ -33,6 +33,7 @@ test:
    stage: deploy
    script:
      - cp -r build /www/test-app/$CI_COMMIT_SHA
+     - cp -Pv /www/html/ /www/test-app/$CI-COMMIT_SHA/prev-version
      - ln -fsnv /var/www/test-app/$CI_COMMIT_SHA /WWW/html
 #+++++++++++++Build staging+++++++++++++++++++++++
 build_staging:
@@ -56,7 +57,7 @@ deploy_prod:
   stage: deploy
   script:
     - cp -r build_$env $docker_html_path/test-app/${env}_$CI_COMMIT_SHA
-    - cp -Pv $docker_html_path/$deploy_subfolder $docker_html_path/test-app/${env}_$CI_COM
+    - cp -Pv $docker_html_path/$deploy_subfolder $docker_html_path/test-app/${env}_$CI_COMMIT_SHA || true
   only:
     - master
 
@@ -77,10 +78,12 @@ activate_prod:
 #run_linter:
 #  stage: test
 #  script: yarn run eslint src/**.js
+
+
 ##++++++++++revert manual+++++++++++++++
-#revert:
-#  stage: revert
-#  when: manual
-#  script:
-#    - cp -Pv --remove-destination $docker_html_path/test-app/$CI_COMMIT_SHA/prev-version $
+revert:
+  stage: revert
+  when: manual
+  script:
+    - cp -Pv --remove-destination $docker_html_path/test-app/$CI_COMMIT_SHA/prev-version $docker_html_path/html
 
