@@ -85,5 +85,5 @@ revert:
   stage: revert
   when: manual
   script:
-    - cp -Pv --remove-destination $docker_html_path/test-app/$CI_COMMIT_SHA/prev-version $docker_html_path/html
-
+#    - cp -Pv --remove-destination $docker_html_path/test-app/$CI_COMMIT_SHA/prev-version $docker_html_path/html
+     - cp -Pv --remove-destination /www/test-app/$CI_COMMIT_SHA/prev-version /www/html
