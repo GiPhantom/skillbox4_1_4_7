@@ -1,16 +1,16 @@
-image: node:14.15.0-stretch
 stages:
- - build
- - test
- - deploy
- - revert
+  - build
+  - test
+  - deploy
+  - revert
 
 variables:
-  docker_html_path: "/var/www"
+  docker_html_path: "/www"
   env: prod
   deploy_subfolder: html
 
-#+++++++++++Build install React+++++++++++++++++
+
+
 install_dependencies:
   image: node:14.15.0-stretch
   stage: build
@@ -28,19 +28,12 @@ install_dependencies:
         - yarn.lock
     paths:
       - node_modules
- #+++++++job copy file mkdir symlink++++++++++++++
-test:
-   stage: deploy
-   script:
-     - cp -r build /www/test-app/_$CI_COMMIT_SHA
-     - cp -Pv /www/html/ /www/test-app/_$CI-COMMIT_SHA/prev-version
-     - ln -fsnv /var/www/test-app/_$CI_COMMIT_SHA /WWW/html
-#+++++++++++++Build staging+++++++++++++++++++++++
+
 build_staging:
   extends: install_dependencies
   variables:
     env: staging
-    REACT_APP_WEBSITE_PREFIX: "[branch=$CI_COMMIT_BRANCH]"
+    REACT_APP_WEBSITE_PREFIX: "[staging] "
     PUBLIC_URL: "/$CI_COMMIT_BRANCH"
 
 deploy_staging:
@@ -57,7 +50,7 @@ deploy_prod:
   stage: deploy
   script:
     - cp -r build_$env $docker_html_path/test-app/${env}_$CI_COMMIT_SHA
-    - ln -fsnv $docker_html_path/test-app/${env}_$CI_COMMIT_BEFORE_SHA $docker_html_path/test-app/${env}_$CI_COMMIT_SHA/prev-version || true
+    - cp -Pv $docker_html_path/$deploy_subfolder $docker_html_path/test-app/${env}_$CI_COMMIT_SHA/prev-version || true
   only:
     - master
 
@@ -79,35 +72,13 @@ activate_prod:
   only:
     - master
 
-##+++++++Run stage test++++++++++++++++
-#run_tests:
-# stage: test
-# script: CI=true yarn test
-#
-##test linter all .js
-#run_linter:
-#  stage: test
-#  script: yarn run eslint src/**.js
-##++++++++++revert manual+++++++++++++++
+
+
+
 revert:
   stage: revert
-  tags:
-    - stagshell
   when: manual
   script:
-    - rm -rf $docker_html_path/$deploy_subfolder
-    - cp -Pv $docker_html_path/test-app/${env}_$CI_COMMIT_BEFORE_SHA/prev-version $docker_html_path/html
-    ##- cp -Pv --remove-destination /www/test-app/$CI_COMMIT_SHA/prev-version $docker_html_path/html
+    - cp -Pv --remove-destination $docker_html_path/test-app/$CI_COMMIT_SHA/prev-version $docker_html_path/html
 
-    #- cp -Pv --remove-destination $docker_html_path/test-app/$CI_COMMIT_SHA/prev-version $docker_html_path/html
-
-#two revert
-revert_previous:
-  stage: revert
-  tags:
-    - stagshell
-  when: manual
-  script:
-    - rm -rf $docker_html_path/$deploy_subfolder
-    - cp -Pv $docker_html_path/test-app/${env}_$CI_COMMIT_BEFORE_SHA/prev-version $docker_html_path/$deploy_subfolder
 
